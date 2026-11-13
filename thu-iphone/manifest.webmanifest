@@ -1,0 +1,13 @@
+{
+  "name": "Thử SelfErgo",
+  "short_name": "Thử SelfErgo",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#E9E1D4",
+  "theme_color": "#E9E1D4",
+  "icons": [
+    { "src": "bieu-tuong-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "bieu-tuong-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

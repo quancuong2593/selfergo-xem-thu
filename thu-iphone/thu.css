@@ -1,0 +1,205 @@
+/* Trang thử chức năng, không phải giao diện thật: màu chỉ để dễ nhìn.
+   Thời lượng viết theo phách như app (mang-4 mục 1.3). */
+:root {
+  --phach: 420ms;
+  --duong-cong: cubic-bezier(0.45, 0, 0.55, 1);
+  --nen: #e9e1d4;
+  --chu: #2b261e;
+  --mo: #6e655a;
+  --vien: rgba(43, 38, 30, 0.2);
+  --nhan: #8a7560;
+  --lop-diu: #2e2520;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--nen);
+  color: var(--chu);
+  font: 16px/1.45 -apple-system, system-ui, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+.noi-dung {
+  max-width: 430px;
+  margin: 0 auto;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+  transition: opacity calc(var(--phach) * 4) var(--duong-cong);
+}
+
+h1 {
+  font-size: 20px;
+  margin: 8px 0 4px;
+}
+
+h2 {
+  font-size: 15px;
+  margin: 0 0 8px;
+}
+
+.mo {
+  color: var(--mo);
+  font-size: 13px;
+  margin: 6px 0;
+}
+
+.khoi {
+  border: 1px solid var(--vien);
+  border-radius: 14px;
+  padding: 12px;
+  margin: 12px 0;
+}
+
+.hang {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 6px 0;
+}
+
+button {
+  font: inherit;
+  font-size: 15px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--vien);
+  background: var(--chu);
+  color: var(--nen);
+}
+
+button.phu,
+button.chon {
+  background: rgba(255, 255, 255, 0.4);
+  color: var(--chu);
+}
+
+button.chon[aria-pressed='true'] {
+  border-color: var(--chu);
+  font-weight: 600;
+}
+
+button:disabled {
+  opacity: 0.4;
+}
+
+.man-tap {
+  text-align: center;
+}
+
+.vong-khung {
+  height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vong {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: var(--nhan);
+  opacity: 0.5;
+  transform: scale(0.6);
+}
+
+/* Một chu kỳ = hít 10 phách + thở 10 phách (NHIP_THO). JS chỉ đặt animation-delay âm để khớp tiếng. */
+.vong.dang-tho {
+  animation: tho calc(var(--phach) * 20) var(--duong-cong) infinite;
+}
+
+.vong.tam-dung,
+[data-diu='true'] .vong {
+  animation-play-state: paused;
+}
+
+@keyframes tho {
+  0%,
+  100% {
+    transform: scale(0.6);
+  }
+  50% {
+    transform: scale(1);
+  }
+}
+
+.trang-thai {
+  font-size: 13px;
+  color: var(--mo);
+  margin: 4px 0;
+}
+
+/* Độ rộng cố định để đổi số không làm dịch bố cục (mang-4 mục 2.4). */
+.dong-ho {
+  font-size: 28px;
+  font-variant-numeric: tabular-nums;
+  width: 6ch;
+  margin: 0 auto 8px;
+  contain: layout paint;
+}
+
+.tu-dong,
+.muc {
+  padding-left: 20px;
+  margin: 0;
+  font-size: 14px;
+}
+
+.tu-dong li,
+.muc li {
+  margin: 6px 0;
+}
+
+.muc select {
+  font: inherit;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+textarea {
+  width: 100%;
+  font: 12px/1.4 ui-monospace, Menlo, monospace;
+  margin-top: 8px;
+}
+
+.nhat-ky {
+  font: 12px/1.4 ui-monospace, Menlo, monospace;
+  padding-left: 32px;
+  margin: 0;
+  max-height: 320px;
+  overflow-y: auto;
+  word-break: break-word;
+}
+
+/* Màn hình dịu (quyết định 13/11 #3): nội dung còn 22%, lớp phủ 42%, chỉ đổi opacity trong 4 phách. */
+.lop-diu {
+  position: fixed;
+  inset: 0;
+  background: var(--lop-diu);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity calc(var(--phach) * 4) var(--duong-cong);
+}
+
+[data-diu='true'] .noi-dung {
+  opacity: 0.22;
+}
+
+[data-diu='true'] .lop-diu {
+  opacity: 0.42;
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vong.dang-tho {
+    animation: none;
+  }
+  .noi-dung,
+  .lop-diu {
+    transition: none;
+  }
+}

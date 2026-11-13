@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#E9E1D4" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Thử SelfErgo" />
+    <link rel="apple-touch-icon" href="bieu-tuong-180.png" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="stylesheet" href="thu.css" />
+    <title>Thử SelfErgo trên iPhone</title>
+    <script src="thu.js" defer></script>
+  </head>
+  <body>
+    <main class="noi-dung">
+      <h1>Thử SelfErgo trên iPhone</h1>
+      <p class="mo" id="moi-truong">Đang đọc môi trường…</p>
+
+      <section class="khoi">
+        <h2>Bài</h2>
+        <div class="hang" id="chon-bai"></div>
+        <label class="hang"><input type="checkbox" id="mat-mo" /> Giả lập bài mở mắt (giữ màn hình, không dịu)</label>
+        <p class="mo" id="da-luu"></p>
+        <button type="button" id="xoa-luu" class="phu">Xoá bản đã lưu trên máy</button>
+      </section>
+
+      <section class="khoi man-tap">
+        <div class="vong-khung"><div class="vong" id="vong"></div></div>
+        <p class="trang-thai" id="trang-thai">cho</p>
+        <p class="dong-ho" id="dong-ho">--:--</p>
+        <div class="hang">
+          <button type="button" id="nut-phat" disabled>Phát</button>
+          <button type="button" id="nut-tam-dung" disabled>Tạm dừng</button>
+          <button type="button" id="nut-dung" disabled>Dừng</button>
+        </div>
+        <p class="mo" id="khoa-man">Wake Lock: chưa xin</p>
+      </section>
+
+      <section class="khoi">
+        <h2>Kiểm tra tự động</h2>
+        <ul class="tu-dong" id="tu-dong"></ul>
+      </section>
+
+      <section class="khoi">
+        <h2>Kết quả 6 mục (bạn tự chấm)</h2>
+        <ol class="muc" id="muc"></ol>
+        <div class="hang">
+          <button type="button" id="chep">Chép kết quả</button>
+          <button type="button" id="xoa-nhat-ky" class="phu">Xoá nhật ký</button>
+        </div>
+        <textarea id="ban-chep" rows="6" readonly hidden></textarea>
+      </section>
+
+      <section class="khoi">
+        <h2>Nhật ký</h2>
+        <ol class="nhat-ky" id="nhat-ky" reversed></ol>
+      </section>
+    </main>
+    <div class="lop-diu" id="lop-diu"></div>
+    <audio id="audio" preload="auto"></audio>
+  </body>
+</html>
