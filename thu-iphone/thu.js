@@ -147,6 +147,8 @@ let wakeLock = null;
 let diu = false;
 let daDonDep = false;
 let giayConLaiCu = -1;
+// Mỗi lần nap() một lượt mới; lượt cũ tải xong thì bỏ, kể cả khi bấm cùng một bài hai lần.
+let luotNap = 0;
 let batDauLuc = null;
 let tamDungTai = null; // currentTime lúc tạm dừng, để so khi tiếp tục
 let anLuc = null; // lúc trang bị ẩn (khoá màn hình)
@@ -248,6 +250,8 @@ function chuanBlob(b) {
 
 async function nap(id) {
   if (trangThai !== 'cho' && trangThai !== 'xong' && trangThai !== 'loi') dung();
+  // Lấy lượt sau dung(), vì dung() cũng tăng lượt để huỷ lượt đang tải.
+  const luot = ++luotNap;
   daDonDep = false;
   baiId = id;
   giayConLaiCu = -1;
@@ -257,7 +261,7 @@ async function nap(id) {
   doiTrangThai('dang-tai');
   try {
     const blob = await layBlob(DS_BAI[id]);
-    if (baiId !== id) return;
+    if (luot !== luotNap) return;
     blobUrl = URL.createObjectURL(blob);
     nghe(audio, 'timeupdate', khiTimeupdate);
     nghe(audio, 'play', khiPlay);
@@ -295,6 +299,7 @@ function tamDung() {
 
 function dung() {
   if (trangThai === 'xong') return;
+  luotNap++;
   doiTrangThai('xong');
   donDep(false);
 }
@@ -499,6 +504,7 @@ function donDep(tronBai) {
       }
     }
     ms.playbackState = 'none';
+    ghi(`donDep: ngay sau khi xoá, ${moTaMediaSession()}`);
   }
   xoaHenGio();
   datDiu(false);
@@ -510,6 +516,15 @@ function donDep(tronBai) {
     `donDep: kết quả ${JSON.stringify({ baiId, batDauLuc, giayDaNghe: Math.round(giayDaNghe), tronBai })}`,
   );
   kiemTraSauDonDep();
+}
+
+// Tách hai phần để biết phần nào còn sót (lần thử 13/11: 'CÒN' sau khi bài hết lúc đang khoá màn).
+function moTaMediaSession() {
+  const ms = navigator.mediaSession;
+  const md = ms.metadata;
+  return `metadata=${md ? `"${md.title}"` : 'null'}, playbackState=${ms.playbackState}${
+    document.hidden ? ', trang đang ẩn' : ''
+  }`;
 }
 
 // Chờ các chuyển động có hồi kết (ví dụ lớp dịu đang mờ ra) chạy xong rồi mới đếm.
@@ -526,11 +541,16 @@ async function kiemTraSauDonDep() {
   const ketQua = {
     hoatAnh: soHoatAnh,
     henGio: henGio.size,
-    mediaSession: ms ? (ms.metadata === null && ms.playbackState === 'none' ? 'đã xoá' : 'CÒN') : 'không có',
+    mediaSession: ms
+      ? ms.metadata === null && ms.playbackState === 'none'
+        ? 'đã xoá'
+        : `CÒN (${moTaMediaSession()})`
+      : 'không có',
     audioSrc: audio.getAttribute('src') ? 'CÒN' : 'đã gỡ',
     wakeLock: wakeLock ? 'CÒN' : 'đã nhả',
   };
-  const dat = soHoatAnh <= 0 && ketQua.henGio === 0 && ketQua.mediaSession !== 'CÒN' && !wakeLock;
+  const dat =
+    soHoatAnh <= 0 && ketQua.henGio === 0 && !ketQua.mediaSession.startsWith('CÒN') && !wakeLock;
   const chu = `${dat ? 'ĐẠT' : 'KHÔNG ĐẠT'} — hoạt ảnh ${soHoatAnh === -1 ? 'không đếm được' : soHoatAnh}, hẹn giờ ${
     ketQua.henGio
   }, Media Session ${ketQua.mediaSession}, audio ${ketQua.audioSrc}, Wake Lock ${ketQua.wakeLock}`;
