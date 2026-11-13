@@ -203,3 +203,9 @@ textarea {
     transition: none;
   }
 }
+
+/* Ô tick và chữ phải nằm cùng hàng, không bị flex-wrap tách ra. */
+.o-tick {
+  flex-wrap: nowrap;
+  font-size: 15px;
+}
