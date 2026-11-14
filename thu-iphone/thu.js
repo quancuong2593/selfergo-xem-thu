@@ -484,6 +484,9 @@ function donDep(tronBai) {
   if (daDonDep) return;
   daDonDep = true;
   const giayDaNghe = audio.currentTime || 0;
+  // Hết bài lúc tắt màn thì timeupdate đã bị bỏ qua, mà bộ nghe "hiện lại" sắp bị gỡ:
+  // vẽ đồng hồ lần cuối ở đây, trước khi gỡ audio làm mất currentTime.
+  capNhatDongHo(true);
   // Gỡ bộ lắng nghe trước, để pause/emptied do chính donDep gây ra không bị xử lý.
   for (const [dich, loai, fn] of boLangNghe) dich.removeEventListener(loai, fn);
   boLangNghe.length = 0;
