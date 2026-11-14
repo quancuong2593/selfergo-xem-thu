@@ -5,7 +5,6 @@
 const PHACH_MS = 420;
 const NHIP_THO = 10; // phách mỗi chiều
 const DIU_SAU_GIAY = 30; // cấu hình theo mang-4 mục 2.5
-const DUNG_LAI_SAU_GIAY = 5; // mang-4 mục 2.3 (#24)
 const phach = (n) => n * PHACH_MS;
 const CHU_KY_GIAY = phach(NHIP_THO * 2) / 1000;
 
@@ -160,9 +159,6 @@ let batDauLuc = null;
 let tamDungTai = null; // currentTime lúc tạm dừng, để so khi tiếp tục
 let anLuc = null; // lúc trang bị ẩn (khoá màn hình)
 let anTaiGiay = null; // currentTime lúc trang bị ẩn
-let tamDungLuc = null; // Date.now() lúc tạm dừng
-let anKhiTamDung = false; // trang bị ẩn trong lúc tạm dừng
-let dangDungLai = false; // đang dựng lại nguồn: bỏ qua timeupdate về 0 tạm thời
 const henGio = new Set();
 const boLangNghe = [];
 
@@ -267,9 +263,6 @@ async function nap(id) {
   giayConLaiCu = -1;
   batDauLuc = null;
   tamDungTai = null;
-  tamDungLuc = null;
-  anKhiTamDung = false;
-  dangDungLai = false;
   $('dong-ho').textContent = '--:--';
   doiTrangThai('dang-tai');
   try {
@@ -283,7 +276,6 @@ async function nap(id) {
     nghe(audio, 'error', khiError);
     nghe(audio, 'loadedmetadata', () => {
       ghi(`loadedmetadata: dài ${audio.duration.toFixed(1)} giây`);
-      if (dangDungLai) return;
       capNhatDongHo(true);
     });
     nghe(document, 'visibilitychange', khiDoiHien);
@@ -303,51 +295,8 @@ function phat() {
     batDauLuc = new Date().toISOString();
     datMediaSession();
   }
-  if (dangDungLai) return;
-  if (trangThai === 'tam-dung' && tamDungLuc !== null) {
-    const daTamDung = (Date.now() - tamDungLuc) / 1000;
-    const an = anKhiTamDung;
-    if (an || daTamDung >= DUNG_LAI_SAU_GIAY) return dungLaiRoiPhat(daTamDung, an);
-    ghi(`phát lại sau ${daTamDung.toFixed(1)} giây tạm dừng, trang không ẩn: phát thẳng`);
-  }
-  goiPlay();
-}
-
-function goiPlay() {
   const p = audio.play();
   if (p && p.catch) p.catch((e) => ghi(`play() bị từ chối: ${e && e.name}`));
-  const t0 = audio.currentTime;
-  // Không đo được có tiếng hay không; ghi những gì đo được để so với tai nghe.
-  setTimeout(() => {
-    ghi(
-      `sau play() khoảng 2 giây: readyState ${audio.readyState}, paused ${audio.paused}, ` +
-        `currentTime ${t0.toFixed(1)} → ${audio.currentTime.toFixed(1)}`,
-    );
-  }, phach(5));
-}
-
-// mang-4 mục 2.3 (#24): tạm dừng lâu hoặc trang đã ẩn thì gán lại chính blob URL, về đúng chỗ,
-// rồi mới phát (iPhone: phát lại có khi không chạy, hoặc giây chạy mà không có tiếng).
-function dungLaiRoiPhat(daTamDung, an) {
-  const viTri = audio.currentTime;
-  tamDungLuc = null; // play() bị chặn thì lần chạm sau phát thẳng
-  anKhiTamDung = false;
-  dangDungLai = true;
-  ghi(
-    `dựng lại nguồn: tạm dừng ${daTamDung.toFixed(1)} giây, trang ẩn: ${an ? 'có' : 'không'}, ` +
-      `readyState trước ${audio.readyState}, vị trí ${viTri.toFixed(1)}`,
-  );
-  const khiCoMetadata = () => {
-    audio.removeEventListener('loadedmetadata', khiCoMetadata);
-    if (!dangDungLai || daDonDep) return;
-    dangDungLai = false;
-    audio.currentTime = viTri;
-    datMediaSession();
-    goiPlay();
-  };
-  audio.addEventListener('loadedmetadata', khiCoMetadata);
-  audio.src = blobUrl;
-  audio.load();
 }
 
 function tamDung() {
@@ -385,8 +334,6 @@ function henGioDiu() {
 let soLanPhat = 0; // số lần audio thật sự phát trong trang này (mục 7)
 function khiPlay() {
   soLanPhat++;
-  tamDungLuc = null;
-  anKhiTamDung = false;
   const t = audio.currentTime;
   if (tamDungTai !== null) {
     const lech = Math.abs(t - tamDungTai);
@@ -406,8 +353,6 @@ function khiPlay() {
 function khiPause() {
   if (trangThai === 'xong' || audio.ended) return;
   tamDungTai = audio.currentTime;
-  tamDungLuc = Date.now();
-  anKhiTamDung = document.hidden;
   ghi(`pause ở ${tamDungTai.toFixed(2)} giây${document.hidden ? ' (khi màn hình đang khoá/ẩn)' : ''}`);
   doiTrangThai('tam-dung');
   xoaHenGio();
@@ -430,7 +375,7 @@ function khiError() {
 
 // Ẩn trang thì bỏ qua timeupdate (mang-4 mục 2.3), hiện lại thì đồng bộ một lần.
 function khiTimeupdate() {
-  if (document.hidden || dangDungLai) return;
+  if (document.hidden) return;
   capNhatDongHo(false);
 }
 
@@ -458,7 +403,6 @@ function khiDoiHien() {
     anLuc = Date.now();
     anTaiGiay = audio.currentTime;
     ghi(`trang bị ẩn (khoá màn hình?) ở ${anTaiGiay.toFixed(1)} giây, trạng thái ${trangThai}`);
-    if (trangThai === 'tam-dung') anKhiTamDung = true;
     return;
   }
   veNhatKy();
@@ -475,12 +419,6 @@ function khiDoiHien() {
     anLuc = null;
   }
   capNhatDongHo(true);
-  // Giống app (#22): iOS có thể bỏ khung phát nhạc khi trang bị treo lúc tạm dừng; đặt lại.
-  if (coMediaSession && (trangThai === 'tam-dung' || trangThai === 'dang-phat')) {
-    datMediaSession();
-    navigator.mediaSession.playbackState = trangThai === 'dang-phat' ? 'playing' : 'paused';
-    ghi(`đặt lại Media Session (${trangThai})`);
-  }
   if (trangThai === 'dang-phat') {
     dongBoNhip();
     if (matMo()) giuManHinh();
@@ -553,8 +491,6 @@ function datMediaSession() {
 function donDep(tronBai) {
   if (daDonDep) return;
   daDonDep = true;
-  dangDungLai = false;
-  tamDungLuc = null;
   const giayDaNghe = audio.currentTime || 0;
   // Hết bài lúc tắt màn thì timeupdate đã bị bỏ qua, mà bộ nghe "hiện lại" sắp bị gỡ:
   // vẽ đồng hồ lần cuối ở đây, trước khi gỡ audio làm mất currentTime.
