@@ -209,3 +209,8 @@ textarea {
   flex-wrap: nowrap;
   font-size: 15px;
 }
+
+/* Mục 7 có nhiều dòng kết quả. */
+.tu-dong li {
+  white-space: pre-line;
+}

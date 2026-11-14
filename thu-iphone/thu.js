@@ -97,7 +97,9 @@ function veTuDong() {
       doLuong.tiepTucDungCho === null ? 'chưa thử' : doLuong.tiepTucDungCho
     }`,
     `Mục 5 · donDep(): ${doLuong.donDep === null ? 'chưa chạy' : doLuong.donDep}`,
-    `Mục 7 · một chạm: ${doLuong.motCham ? doLuong.motCham : 'chưa thử'}`,
+    `Mục 7 · một chạm: ${
+      Array.isArray(doLuong.motCham) && doLuong.motCham.length ? '\n    ' + doLuong.motCham.join('\n    ') : 'chưa thử'
+    }`,
   ];
   for (const s of dong) {
     const li = document.createElement('li');
@@ -327,7 +329,9 @@ function henGioDiu() {
   }
 }
 
+let soLanPhat = 0; // số lần audio thật sự phát trong trang này (mục 7)
 function khiPlay() {
+  soLanPhat++;
   const t = audio.currentTime;
   if (tamDungTai !== null) {
     const lech = Math.abs(t - tamDungTai);
@@ -628,16 +632,23 @@ function khoiDong() {
       // Mục 7 (bước 4): app gọi play() sau khi đọc bài từ kho xong, tức là sau một lần chờ.
       // Thử xem Safari còn coi đó là "trong lần chạm" không.
       const motCham = $('mot-cham').checked;
+      const chamThem = Number($('cham-them').value);
       const luc = performance.now();
-      nap(id).then(() => {
+      nap(id)
+        .then(() => new Promise((xong) => setTimeout(xong, motCham ? chamThem : 0)))
+        .then(() => {
         if (!motCham || trangThai !== 'san-sang') return;
         const cho = Math.round(performance.now() - luc);
-        ghi(`một chạm: gọi play() sau ${cho} ms chờ nạp bài`);
+        // App thật tạo thẻ <audio> mới mỗi lần mở: lần phát đầu tiên của trang mới là ca khó.
+        const lanDau = soLanPhat === 0 ? 'LẦN PHÁT ĐẦU TIÊN của trang' : `audio đã phát ${soLanPhat} lần trước`;
+        ghi(`một chạm: gọi play() sau ${cho} ms chờ (${lanDau})`);
+        const ghiKq = (kq) =>
+          capNhatDo('motCham', [...(Array.isArray(doLuong.motCham) ? doLuong.motCham : []), `${kq} · ${cho} ms · ${lanDau} · ${laManHinhChinh ? 'MH chính' : 'tab'}`].slice(-6));
         const p = audio.play();
         if (p && p.then)
           p.then(
-            () => capNhatDo('motCham', `ĐẠT: phát được sau ${cho} ms chờ`),
-            (e) => capNhatDo('motCham', `KHÔNG ĐẠT: ${e && e.name} sau ${cho} ms chờ`),
+            () => ghiKq('ĐẠT'),
+            (e) => ghiKq(`KHÔNG ĐẠT (${e && e.name})`),
           );
         if (!batDauLuc) {
           batDauLuc = new Date().toISOString();
