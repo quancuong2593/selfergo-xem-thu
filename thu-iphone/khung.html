@@ -57,6 +57,18 @@
         padding: 8px 12px;
         margin: 8px 0;
       }
+      /* Cách 3 (#31): nền nằm trên lớp cố định cao 100lvh, không trên html. */
+      .lop-nen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 100vh;
+        height: 100lvh;
+        z-index: -1;
+        pointer-events: none;
+        background: linear-gradient(180deg, #f6e5b6 0%, #f2d594 55%, #ecc478 100%);
+      }
       .tham-do {
         position: absolute;
         left: 0;
@@ -72,9 +84,10 @@
       <h1>Đo khung màn hình (vệt trắng ở đáy)</h1>
       <p>Mở từ biểu tượng. Nhìn đáy màn hình: có vệt không, màu gì, nằm trên hay dưới vạch đỏ? Vuốt thử, rồi bấm Chép.</p>
       <p>
-        Cách sửa (#29), bật rồi <b>tắt hẳn app, mở lại từ biểu tượng</b>:<br />
-        <label><input type="checkbox" id="cach-1" /> 1. Cuộn 1 điểm rồi về 0, ngay sau resize đầu (hoặc load)</label><br />
+        Cách sửa (#29, #31), bật rồi <b>tắt hẳn app, mở lại từ biểu tượng</b>:<br />
+        <label><input type="checkbox" id="cach-1" /> 1. Cuộn 1 điểm rồi về 0, khi thấy khung thấp hơn màn hình</label><br />
         <label><input type="checkbox" id="cach-2" /> 2. Kèm: body cao hơn khung 1 điểm trong một khung hình (cho trang không cuộn được)</label><br />
+        <label><input type="checkbox" id="cach-3" /> 3. Nền trên lớp cố định cao 100lvh thay vì trên html</label><br />
         <label><input type="checkbox" id="khoa-cuon" /> Giống app: trang không cuộn được (html, body cao đúng khung, overflow hidden)</label>
       </p>
       <button type="button" id="chep">Chép kết quả</button>
@@ -90,7 +103,8 @@
       'use strict';
       var dong = [];
       // Công tắc lưu trên máy: cách sửa chỉ thử được lúc mở app từ biểu tượng.
-      var CONG_TAC = ['cach-1', 'cach-2', 'khoa-cuon'];
+      var CONG_TAC = ['cach-1', 'cach-2', 'cach-3', 'khoa-cuon'];
+      var daChay = []; // cách nào đã chạy, ghi vào mỗi dòng đo
       var bat = {};
       CONG_TAC.forEach(function (id) {
         try { bat[id] = localStorage.getItem('khung.' + id) === '1'; } catch (e) { bat[id] = false; }
@@ -105,7 +119,17 @@
         k.textContent = 'html,body{height:100%;min-height:0;overflow:hidden}';
         document.head.appendChild(k);
       }
+      if (bat['cach-3']) {
+        document.documentElement.style.background = 'none';
+        var lop = document.createElement('div');
+        lop.className = 'lop-nen';
+        document.body.insertBefore(lop, document.body.firstChild);
+        daChay.push('cách 3');
+      }
       var batDau = Date.now();
+      function laManHinhChinh() {
+        return navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
+      }
       var cao = function (id) {
         var el = document.getElementById(id);
         return el ? Math.round(el.getBoundingClientRect().height) : '?';
@@ -124,7 +148,8 @@
             ' · cuộn ' + Math.round(window.scrollY) +
             '\n  100vh ' + cao('vh') + ' · dvh ' + cao('dvh') + ' · lvh ' + cao('lvh') + ' · svh ' + cao('svh') +
             ' · an toàn trên ' + cao('tren') + ' dưới ' + cao('duoi') +
-            '\n  màn hình chính: ' + (navigator.standalone === true || matchMedia('(display-mode: standalone)').matches)
+            '\n  màn hình chính: ' + laManHinhChinh() +
+            ' · cách đã chạy: ' + (daChay.length ? daChay.join(', ') : 'không')
         );
         document.getElementById('do').textContent = dong.join('\n');
       }
@@ -134,8 +159,10 @@
       var daSua = false;
       function sua(vi) {
         if (daSua || !bat['cach-1']) return;
-        // Chỉ sửa khi thấy đúng dấu hiệu đã đo (#29): khung đã cao hơn mà trang vẫn tính chiều cao cũ.
-        if (document.documentElement.clientHeight >= window.innerHeight) {
+        // Dấu hiệu (#31): mở từ màn hình chính mà khung (innerHeight) thấp hơn màn hình. Ở chế độ
+        // "giống app" innerHeight đứng yên 762, nên không dựa vào clientHeight < innerHeight được.
+        var thap = window.innerHeight < screen.height || cao('lvh') > window.innerHeight;
+        if (!laManHinhChinh() || !thap) {
           do_('chưa cần sửa lúc ' + vi);
           return;
         }
@@ -146,10 +173,11 @@
           if (bat['cach-2']) body.style.minHeight = 'calc(100% + 1px)';
           window.scrollTo(0, 1);
           window.scrollTo(0, 0);
+          daChay.push(bat['cach-2'] ? 'cách 1 + 2 lúc ' + vi : 'cách 1 lúc ' + vi);
           if (bat['cach-2']) {
-            requestAnimationFrame(function () { body.style.minHeight = cu; do_('đã sửa (cách 2) sau ' + vi); });
+            requestAnimationFrame(function () { body.style.minHeight = cu; do_('vừa sửa'); });
           } else {
-            do_('đã sửa (cách 1) sau ' + vi);
+            do_('vừa sửa');
           }
         });
       }
@@ -157,6 +185,7 @@
       addEventListener('load', function () {
         do_('load');
         sua('load');
+        setTimeout(function () { sua('1 phách sau load'); }, 420);
         setTimeout(function () { do_('sau load 1 giây'); }, 1000);
       });
       var lan = 0;
