@@ -24,6 +24,7 @@ const MUC = [
   'Wake Lock: tab Safari giữ được; màn hình chính bỏ qua êm, tiếng vẫn chạy',
   'Sau donDep(): không hoạt ảnh, không hẹn giờ, Media Session đã xoá',
   'Đăng nhập Google từ màn hình chính (chưa làm: cần backend, bước 9)',
+  'Một chạm: chọn bài là phát luôn, cả bài chưa lưu (tải 18 MB) và bài đã lưu',
 ];
 
 const $ = (id) => document.getElementById(id);
@@ -86,7 +87,7 @@ function moTaMoiTruong() {
 }
 
 // ---------- kết quả đo tự động (giữ qua lần mở sau) ----------
-const doLuong = docLuu(KHOA_DO, { khoaLauNhat: 0, tiepTucDungCho: null, donDep: null });
+const doLuong = docLuu(KHOA_DO, { khoaLauNhat: 0, tiepTucDungCho: null, donDep: null, motCham: null });
 function veTuDong() {
   const ul = $('tu-dong');
   ul.textContent = '';
@@ -96,6 +97,7 @@ function veTuDong() {
       doLuong.tiepTucDungCho === null ? 'chưa thử' : doLuong.tiepTucDungCho
     }`,
     `Mục 5 · donDep(): ${doLuong.donDep === null ? 'chưa chạy' : doLuong.donDep}`,
+    `Mục 7 · một chạm: ${doLuong.motCham ? doLuong.motCham : 'chưa thử'}`,
   ];
   for (const s of dong) {
     const li = document.createElement('li');
@@ -623,7 +625,25 @@ function khoiDong() {
     b.setAttribute('aria-pressed', 'false');
     b.addEventListener('click', () => {
       for (const x of chon.children) x.setAttribute('aria-pressed', String(x === b));
-      nap(id);
+      // Mục 7 (bước 4): app gọi play() sau khi đọc bài từ kho xong, tức là sau một lần chờ.
+      // Thử xem Safari còn coi đó là "trong lần chạm" không.
+      const motCham = $('mot-cham').checked;
+      const luc = performance.now();
+      nap(id).then(() => {
+        if (!motCham || trangThai !== 'san-sang') return;
+        const cho = Math.round(performance.now() - luc);
+        ghi(`một chạm: gọi play() sau ${cho} ms chờ nạp bài`);
+        const p = audio.play();
+        if (p && p.then)
+          p.then(
+            () => capNhatDo('motCham', `ĐẠT: phát được sau ${cho} ms chờ`),
+            (e) => capNhatDo('motCham', `KHÔNG ĐẠT: ${e && e.name} sau ${cho} ms chờ`),
+          );
+        if (!batDauLuc) {
+          batDauLuc = new Date().toISOString();
+          datMediaSession();
+        }
+      });
     });
     chon.appendChild(b);
   }
@@ -660,6 +680,7 @@ function khoiDong() {
     doLuong.khoaLauNhat = 0;
     doLuong.tiepTucDungCho = null;
     doLuong.donDep = null;
+    doLuong.motCham = null;
     ghiLuu(KHOA_DO, doLuong);
     veNhatKy();
     veTuDong();
