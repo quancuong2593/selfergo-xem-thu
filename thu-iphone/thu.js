@@ -25,6 +25,7 @@ const MUC = [
   'Sau donDep(): không hoạt ảnh, không hẹn giờ, Media Session đã xoá',
   'Đăng nhập Google từ màn hình chính (chưa làm: cần backend, bước 9)',
   'Một chạm: chọn bài là phát luôn, cả bài chưa lưu (tải 18 MB) và bài đã lưu',
+  'Tạm dừng trên màn hình khoá, chờ 30 giây, bấm phát lại: khung phát nhạc còn, phát tiếp được',
 ];
 
 const $ = (id) => document.getElementById(id);
@@ -417,6 +418,12 @@ function khiDoiHien() {
     anLuc = null;
   }
   capNhatDongHo(true);
+  // Giống app (#22): iOS có thể bỏ khung phát nhạc khi trang bị treo lúc tạm dừng; đặt lại.
+  if (coMediaSession && (trangThai === 'tam-dung' || trangThai === 'dang-phat')) {
+    datMediaSession();
+    navigator.mediaSession.playbackState = trangThai === 'dang-phat' ? 'playing' : 'paused';
+    ghi(`đặt lại Media Session (${trangThai})`);
+  }
   if (trangThai === 'dang-phat') {
     dongBoNhip();
     if (matMo()) giuManHinh();
