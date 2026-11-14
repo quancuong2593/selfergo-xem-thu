@@ -71,6 +71,12 @@
     <main>
       <h1>Đo khung màn hình (vệt trắng ở đáy)</h1>
       <p>Mở từ biểu tượng. Nhìn đáy màn hình: có vệt không, màu gì, nằm trên hay dưới vạch đỏ? Vuốt thử, rồi bấm Chép.</p>
+      <p>
+        Cách sửa (#29), bật rồi <b>tắt hẳn app, mở lại từ biểu tượng</b>:<br />
+        <label><input type="checkbox" id="cach-1" /> 1. Cuộn 1 điểm rồi về 0, ngay sau resize đầu (hoặc load)</label><br />
+        <label><input type="checkbox" id="cach-2" /> 2. Kèm: body cao hơn khung 1 điểm trong một khung hình (cho trang không cuộn được)</label><br />
+        <label><input type="checkbox" id="khoa-cuon" /> Giống app: trang không cuộn được (html, body cao đúng khung, overflow hidden)</label>
+      </p>
       <button type="button" id="chep">Chép kết quả</button>
       <pre id="do"></pre>
     </main>
@@ -83,6 +89,22 @@
     <script>
       'use strict';
       var dong = [];
+      // Công tắc lưu trên máy: cách sửa chỉ thử được lúc mở app từ biểu tượng.
+      var CONG_TAC = ['cach-1', 'cach-2', 'khoa-cuon'];
+      var bat = {};
+      CONG_TAC.forEach(function (id) {
+        try { bat[id] = localStorage.getItem('khung.' + id) === '1'; } catch (e) { bat[id] = false; }
+        var o = document.getElementById(id);
+        o.checked = bat[id];
+        o.addEventListener('change', function () {
+          try { localStorage.setItem('khung.' + id, o.checked ? '1' : '0'); } catch (e) {}
+        });
+      });
+      if (bat['khoa-cuon']) {
+        var k = document.createElement('style');
+        k.textContent = 'html,body{height:100%;min-height:0;overflow:hidden}';
+        document.head.appendChild(k);
+      }
       var batDau = Date.now();
       var cao = function (id) {
         var el = document.getElementById(id);
@@ -92,7 +114,7 @@
         var vv = window.visualViewport;
         var html = document.documentElement;
         dong.push(
-          '[' + ((Date.now() - batDau) / 1000).toFixed(1) + ' giây · ' + luc + ']\n' +
+          '[' + Math.round(performance.now()) + ' ms từ lúc mở · ' + luc + ']\n' +
             '  man hinh ' + screen.width + '×' + screen.height +
             ' · innerHeight ' + window.innerHeight +
             ' · visualViewport ' + (vv ? Math.round(vv.height) + ' (lệch ' + Math.round(vv.offsetTop) + ')' : 'không có') +
@@ -106,9 +128,35 @@
         );
         document.getElementById('do').textContent = dong.join('\n');
       }
-      do_('mở trang');
+      do_('mở trang (công tắc: ' + CONG_TAC.filter(function (id) { return bat[id]; }).join(', ') + ')');
+
+      // Cách 1 (và 2): một cú cuộn 1 điểm rồi trả về, để iOS dựng lại khung web cho đủ cao (#29).
+      var daSua = false;
+      function sua(vi) {
+        if (daSua || !bat['cach-1']) return;
+        // Chỉ sửa khi thấy đúng dấu hiệu đã đo (#29): khung đã cao hơn mà trang vẫn tính chiều cao cũ.
+        if (document.documentElement.clientHeight >= window.innerHeight) {
+          do_('chưa cần sửa lúc ' + vi);
+          return;
+        }
+        daSua = true;
+        requestAnimationFrame(function () {
+          var body = document.body;
+          var cu = body.style.minHeight;
+          if (bat['cach-2']) body.style.minHeight = 'calc(100% + 1px)';
+          window.scrollTo(0, 1);
+          window.scrollTo(0, 0);
+          if (bat['cach-2']) {
+            requestAnimationFrame(function () { body.style.minHeight = cu; do_('đã sửa (cách 2) sau ' + vi); });
+          } else {
+            do_('đã sửa (cách 1) sau ' + vi);
+          }
+        });
+      }
+      addEventListener('resize', function () { sua('resize'); });
       addEventListener('load', function () {
         do_('load');
+        sua('load');
         setTimeout(function () { do_('sau load 1 giây'); }, 1000);
       });
       var lan = 0;
