@@ -15,6 +15,10 @@
   box-sizing: border-box;
 }
 
+html {
+  touch-action: manipulation; /* chạm đôi không phóng to, giống app (#24) */
+}
+
 html,
 body {
   margin: 0;
