@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="vi" data-bo="fable-a">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#F6E5B6" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="SelfErgo" />
+    <link rel="apple-touch-icon" href="/selfergo-xem-thu/xem-thu/bieu-tuong-192.png" />
+    <title>SelfErgo</title>
+    <!-- Khung hình đầu tiên đúng nền của bộ, trước khi CSS và JS chính tải (mang-4 mục 1.10).
+         Màu phải trùng --nen trong src/bo-man-hinh/<id>/token.css; npm run kiem-tra so hai nơi. -->
+    <style>html[data-bo=fable-a]{background:linear-gradient(#f6e5b6 0%,#f2d594 55%,#ecc478 100%)}html[data-bo=lat-the]{background:linear-gradient(#f6e3d3 0%,#f0d0b8 60%,#e9bd9e 100%)}html[data-bo=khung-tranh]{background:linear-gradient(#f0eee9 0%,#e8e5de 100%)}html[data-bo=tam-ve]{background:linear-gradient(#e9dfcf 0%,#dfd2bd 100%)}html{min-height:100%}</style>
+    <script>
+      (function () {
+        var m = {
+          'fable-a': '#F6E5B6',
+          'lat-the': '#F6E3D3',
+          'khung-tranh': '#F0EEE9',
+          'tam-ve': '#E9DFCF',
+        };
+        var b = 'fable-a';
+        try {
+          var s = localStorage.getItem('selfergo.bo');
+          if (s && m[s]) b = s;
+        } catch (e) {}
+        document.documentElement.setAttribute('data-bo', b);
+        document.querySelector('meta[name="theme-color"]').setAttribute('content', m[b]);
+        window.__selfergoMauDau = m;
+      })();
+    </script>
+    <script type="module" crossorigin src="/selfergo-xem-thu/xem-thu/assets/index-CzyL4PWO.js"></script>
+    <link rel="stylesheet" crossorigin href="/selfergo-xem-thu/xem-thu/assets/index-BvD1gmly.css">
+  <link rel="manifest" href="/selfergo-xem-thu/xem-thu/manifest.webmanifest"></head>
+  <body>
+    <div id="app"></div>
+  </body>
+</html>
