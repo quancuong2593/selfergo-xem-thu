@@ -1,1 +1,0 @@
-var e={nam:2026,thang:11,soNgay:6,ngayDaTap:[`2026-11-02`,`2026-11-03`,`2026-11-05`,`2026-11-08`,`2026-11-09`,`2026-11-12`],ganDay:[{baiId:`ngu-trua-30-phut`,ngay:`2026-11-12`,phut:30},{baiId:`hoi-tho-5-phut`,ngay:`2026-11-09`,phut:5},{baiId:`nhip-tho-3-phut`,ngay:`2026-11-08`,phut:3}],tongNgay:6,tuNgay:`2026-11-02`,tongPhut:81};export{e as default};
