@@ -31,12 +31,17 @@
           var s = localStorage.getItem('selfergo.bo');
           if (s && m[s]) b = s;
         } catch (e) {}
+        // Máy tính luôn vẽ fable-a (mang-4 mục 1.13). Số 900 trùng DIEM_GAY_MAY_TINH, kiem-tra so.
+        if (window.matchMedia && window.matchMedia('(min-width: 900px)').matches) {
+          b = 'fable-a';
+          document.documentElement.setAttribute('data-may-tinh', '');
+        }
         document.documentElement.setAttribute('data-bo', b);
         document.querySelector('meta[name="theme-color"]').setAttribute('content', m[b]);
         window.__selfergoMauDau = m;
       })();
     </script>
-    <script type="module" crossorigin src="/selfergo-xem-thu/xem-thu/assets/index-BQb-mTNL.js"></script>
+    <script type="module" crossorigin src="/selfergo-xem-thu/xem-thu/assets/index-CM58DrH_.js"></script>
     <link rel="stylesheet" crossorigin href="/selfergo-xem-thu/xem-thu/assets/index-CBTmQfYK.css">
   <link rel="manifest" href="/selfergo-xem-thu/xem-thu/manifest.webmanifest"></head>
   <body>
